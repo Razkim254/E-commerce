@@ -1,0 +1,19 @@
+# 🔐 Environment variables
+.env
+
+# 📦 Node modules
+node_modules/
+
+# 🗑️ Logs
+logs
+*.log
+npm-debug.log*
+
+# 🧪 Test output
+coverage/
+
+# 🧹 OS + Editor junk
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
