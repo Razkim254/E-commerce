@@ -20,6 +20,10 @@ const productSchema = new mongoose.Schema({
         model: { type: String },
         version: { type: String },
         other: { type: String }
+    },
+    images: {
+        type: [String], // ✅ array of image URLs or file paths
+        default: []
     }
 }, { timestamps: true });
 
