@@ -21,10 +21,12 @@ const productSchema = new mongoose.Schema({
         version: { type: String },
         other: { type: String }
     },
-    images: {
-        type: [String], // ✅ array of image URLs or file paths
-        default: []
-    }
+    images: [
+        {
+            url: { type: String, required: true },       // ✅ Cloudinary URL
+            public_id: { type: String, required: true }  // ✅ Cloudinary public_id
+        }
+    ]
 }, { timestamps: true });
 
 export default mongoose.model('Product', productSchema);
