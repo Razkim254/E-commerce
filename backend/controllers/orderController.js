@@ -100,3 +100,48 @@ export const updateOrderStatus = async (req, res) => {
         res.status(400).json({ message: error.message });
     }
 };
+// ❌ Delete order (user or admin)
+export const deleteOrder = async (req, res) => {
+    const { orderId } = req.params; // we'll pass orderId in URL
+
+    try {
+        const order = await Order.findById(orderId);
+        if (!order) {
+            return res.status(404).json({ message: 'Order not found' });
+        }
+
+        // Optional: check if user is owner or admin
+        if (!req.user.isAdmin && order.user.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ message: 'Not authorized to delete this order' });
+        }
+
+        await order.deleteOne();
+        res.json({ message: 'Order deleted successfully' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+// ❌ Cancel order (user)
+export const cancelOrder = async (req, res) => {
+    const { orderId } = req.params;
+
+    try {
+        const order = await Order.findById(orderId);
+        if (!order) {
+            return res.status(404).json({ message: 'Order not found' });
+        }
+
+        // Only allow if current user owns the order
+        if (order.user.toString() !== req.user._id.toString() && !req.user.isAdmin) {
+            return res.status(403).json({ message: 'Not authorized to cancel this order' });
+        }
+
+        // Update status instead of deleting
+        order.status = 'cancelled'; // add 'cancelled' to your enum in Order schema
+        await order.save();
+
+        res.json({ message: 'Order cancelled successfully', order });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
