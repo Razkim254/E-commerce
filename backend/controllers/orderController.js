@@ -3,10 +3,11 @@ import Product from '../models/Product.js';
 
 // 🛒 Place an order (user-friendly: resolves product names)
 export const placeOrder = async (req, res) => {
-    const { products, location, deliveryFee } = req.body;
+    const { products, location } = req.body; // ✅ no longer trust deliveryFee from frontend
     const userId = req.user._id;
 
     try {
+        // Resolve product IDs from names
         const productDocs = await Promise.all(
             products.map(async ({ name, quantity }) => {
                 const prod = await Product.findOne({ name });
@@ -15,6 +16,7 @@ export const placeOrder = async (req, res) => {
             })
         );
 
+        // Compute subtotal from product prices × quantities
         const totalProductCost = await Promise.all(
             productDocs.map(async ({ product, quantity }) => {
                 const prod = await Product.findById(product);
@@ -22,8 +24,13 @@ export const placeOrder = async (req, res) => {
             })
         );
 
-        const totalAmount = totalProductCost.reduce((sum, val) => sum + val, 0) + deliveryFee;
+        const subtotal = totalProductCost.reduce((sum, val) => sum + val, 0);
 
+        // ✅ Always recompute deliveryFee here (10% of subtotal)
+        const deliveryFee = Number((subtotal * 0.1).toFixed(2));
+        const totalAmount = subtotal + deliveryFee;
+
+        // Create order
         const order = await Order.create({
             user: userId,
             products: productDocs,
@@ -45,7 +52,7 @@ export const getMyOrders = async (req, res) => {
         const userId = req.user._id;
 
         const orders = await Order.find({ user: userId })
-            .populate('products.product', 'name price')
+            .populate('products.product', 'name price images') // ✅ include images
             .sort({ createdAt: -1 });
 
         res.status(200).json(orders);
@@ -54,13 +61,12 @@ export const getMyOrders = async (req, res) => {
     }
 };
 
-
 // 🧑‍💼 Get all orders (admin)
 export const getAllOrders = async (req, res) => {
     try {
         const orders = await Order.find()
             .populate('user', 'name email')
-            .populate('products.product', 'name price')
+            .populate('products.product', 'name price images') // ✅ include images
             .sort({ createdAt: -1 });
 
         res.json(orders);
