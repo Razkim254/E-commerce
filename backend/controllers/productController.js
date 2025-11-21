@@ -21,9 +21,6 @@ const normalizeDescription = (desc) => {
 // ✅ Create one or many products (admin only) with Cloudinary images
 export const createProduct = async (req, res) => {
     try {
-        console.log("Raw req.body:", req.body);
-        console.log("Raw req.files:", req.files);
-
         const { name, categoryName, price, description } = req.body;
 
         if (!name || !categoryName || !price) {
@@ -40,7 +37,7 @@ export const createProduct = async (req, res) => {
         const product = new Product({
             name,
             category: categoryId,
-            price,
+            price: Number(price), // ensure numeric
             description: normalizeDescription(description),
             images: uploadedImages,
         });
@@ -48,11 +45,12 @@ export const createProduct = async (req, res) => {
         await product.save();
         res.status(201).json(product);
     } catch (error) {
-        console.error("Create error:", error);
-        res.status(500).json({ message: error.message });
+        const status = error.message.includes('not found') || error.message.includes('Missing')
+            ? 400
+            : 500;
+        res.status(status).json({ message: error.message });
     }
 };
-
 
 // 🌐 Get all products (public)
 export const getProducts = async (req, res) => {
