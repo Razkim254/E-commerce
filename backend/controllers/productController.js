@@ -20,47 +20,39 @@ const normalizeDescription = (desc) => {
 
 // ✅ Create one or many products (admin only) with Cloudinary images
 export const createProduct = async (req, res) => {
-    const payload = Array.isArray(req.body) ? req.body : [req.body];
-
     try {
-        // Cloudinary URLs + public_ids from multer-storage-cloudinary
-        const uploadedImages = (req.files || []).map(f => ({
-            url: f.path,
-            public_id: f.filename, // Cloudinary public_id
-        }));
+        console.log("Raw req.body:", req.body);
+        console.log("Raw req.files:", req.files);
 
-        const productsToCreate = [];
+        const { name, categoryName, price, description } = req.body;
 
-        for (let i = 0; i < payload.length; i++) {
-            const item = payload[i];
-            if (!item || typeof item !== 'object') {
-                return res.status(400).json({ message: `Invalid product at index ${i}` });
-            }
-
-            const { name, categoryName, price } = item;
-            const description = normalizeDescription(item.description);
-
-            if (!name || !categoryName || !price) {
-                return res.status(400).json({ message: `Missing fields in product at index ${i}` });
-            }
-
-            const categoryId = await resolveCategoryId(categoryName);
-
-            productsToCreate.push({
-                name,
-                category: categoryId,
-                price,
-                description,
-                images: uploadedImages, // ✅ array of {url, public_id}
-            });
+        if (!name || !categoryName || !price) {
+            return res.status(400).json({ message: "Missing required fields" });
         }
 
-        const created = await Product.insertMany(productsToCreate);
-        res.status(201).json(created.length === 1 ? created[0] : created);
+        const categoryId = await resolveCategoryId(categoryName);
+
+        const uploadedImages = (req.files || []).map(f => ({
+            url: f.path,
+            public_id: f.filename || f.public_id || f.originalname || 'unknown',
+        }));
+
+        const product = new Product({
+            name,
+            category: categoryId,
+            price,
+            description: normalizeDescription(description),
+            images: uploadedImages,
+        });
+
+        await product.save();
+        res.status(201).json(product);
     } catch (error) {
-        res.status(400).json({ message: error.message });
+        console.error("Create error:", error);
+        res.status(500).json({ message: error.message });
     }
 };
+
 
 // 🌐 Get all products (public)
 export const getProducts = async (req, res) => {
