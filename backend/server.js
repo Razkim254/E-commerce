@@ -13,9 +13,12 @@ connectDB();
 
 const app = express();
 
-// ✅ Enable CORS for frontend access
+// ✅ Configure CORS
+
+dotenv.config();
+
 app.use(cors({
-    origin: 'http://localhost:5173', // or use process.env.CLIENT_URL
+    origin: process.env.CLIENT_URL,
     credentials: true
 }));
 
