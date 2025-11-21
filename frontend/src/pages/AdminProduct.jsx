@@ -43,9 +43,20 @@ function AdminProduct() {
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value });
     };
-
     const handleImageChange = (e) => {
-        setImages(e.target.files);
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/avif'];
+        const selectedFiles = Array.from(e.target.files);
+
+        const validFiles = selectedFiles.filter(file =>
+            allowedTypes.includes(file.type)
+        );
+
+        if (validFiles.length < selectedFiles.length) {
+            // Show a warning toast if some files were rejected
+            toast.warning('Some files were rejected due to unsupported format (only jpg, png, webp, avif allowed)');
+        }
+
+        setImages(validFiles);
     };
 
     const createProduct = async () => {
@@ -201,8 +212,9 @@ function AdminProduct() {
                 <input
                     type="file"
                     multiple
+                    accept=".jpg,.jpeg,.png,.webp,.avif"
                     onChange={handleImageChange}
-                    className="w-full p-2 mb-3 border border-gray-300 rounded focus:outline-purple-500"
+                    className="w-full p-2 mb-3 border border-gray-300 rounded"
                 />
 
                 <div className="flex flex-wrap gap-2 mb-3">
