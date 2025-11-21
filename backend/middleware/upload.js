@@ -6,7 +6,7 @@ const storage = new CloudinaryStorage({
     cloudinary,
     params: {
         folder: 'products',           // organize assets in Cloudinary
-        allowed_formats: ['jpg', 'jpeg', 'png'],
+        allowed_formats: ['jpg', 'jpeg', 'png', 'avif', 'webp'],
         resource_type: 'image',
         transformation: [{ quality: 'auto', fetch_format: 'auto' }], // smart delivery
     },
